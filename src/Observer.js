@@ -57,7 +57,7 @@ export const Observer = Class => class extends Class {
     this.currentMessageId = messageId;
     return new Promise((resolve) => {
       this.currentMessageId = null;
-      resolve(this.onNotified());
+      resolve(this.onNotified(messageId));
     });
   }
 };

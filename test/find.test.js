@@ -18,12 +18,12 @@ describe('find', () => {
     expect(find(testState, 'branch.asDeep')).toBe(asDeep);
   });
 
-  const o1 = new Oxssy(datatype.string, 'o1');
-  const o2 = new Oxssy(datatype.string, 'o2');
-  const o3 = new Oxssy(datatype.string, 'o3');
+  const o1 = new Oxssy('o1');
+  const o2 = new Oxssy('o2');
+  const o3 = new Oxssy('o3');
   const m1 = new OxssyMap({ o2, o3 });
   const a1 = new OxssyArray([o1, m1]);
-  const o4 = new Oxssy(datatype.string, 'o4');
+  const o4 = new Oxssy('o4');
   const a2 = new OxssyArray([a1, o4]);
   const m2 = new OxssyMap({ a2 });
 

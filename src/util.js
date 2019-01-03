@@ -25,15 +25,12 @@ export const is = (x, y) => {
   return x !== x && y !== y;
 };
 
-export const mapEval = (objectOfData, validation = false) => {
+export const mapEval = (objectOfData) => {
   const values = {};
   Object.entries(objectOfData).forEach(([key, data]) => {
-    values[key] = validation ? data.validation : data.value;
+    values[key] = data.value;
   });
   return values;
 };
 
-export const arrayEval = (arrayOfData, validation = false) => arrayOfData.map(el => (
-  validation ? el.validation : el.value
-));
-export const stringifySymbol = symbol => (symbol ? symbol.toString().slice(7, -1) : null);
+export const arrayEval = arrayOfData => arrayOfData.map(el => el.value);
