@@ -1,2 +1,2 @@
 export { default as datatype } from './datatype';
-export { errorCode, ValidationError } from './error';
+export { errorCode, isError, ValidationError } from './error';

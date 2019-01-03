@@ -1,4 +1,4 @@
-export function shallowEqual(objA, objB) {
+export const shallowEqual = (objA, objB) => {
   if (Object.is(objA, objB)) {
     return true;
   }
@@ -11,28 +11,29 @@ export function shallowEqual(objA, objB) {
     return false;
   }
   for (const key of Object.keys(objA)) {
-    if (!objB.hasOwnProperty(key) || !Object.is(objA[key], objB[key])) {
+    if (!Object.prototype.hasOwnProperty.call(objB, key) || !Object.is(objA[key], objB[key])) {
       return false;
     }
   }
   return true;
-}
+};
 
-export function is(x, y) {
+export const is = (x, y) => {
   if (x === y) {
     return x !== 0 || 1 / x === 1 / y;
   }
   return x !== x && y !== y;
-}
+};
 
-export function mapEval(objectOfData) {
-  return Object.entries(objectOfData).reduce((obj, [key, data]) => {
-    const result = obj;
-    result[key] = data.value;
-    return result;
-  }, {});
-}
+export const mapEval = (objectOfData, validation = false) => {
+  const values = {};
+  Object.entries(objectOfData).forEach(([key, data]) => {
+    values[key] = validation ? data.validation : data.value;
+  });
+  return values;
+};
 
-export function arrayEval(arrayOfData) {
-  return arrayOfData.map(el => el.value);
-}
+export const arrayEval = (arrayOfData, validation = false) => arrayOfData.map(el => (
+  validation ? el.validation : el.value
+));
+export const stringifySymbol = symbol => (symbol ? symbol.toString().slice(7, -1) : null);

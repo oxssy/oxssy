@@ -1,72 +1,92 @@
-import PropTypes from 'prop-types';
-import { Conduit } from './EmitterReceiver';
+import OxssyCollection from './OxssyCollection';
 import { mapEval } from './util';
 
 
-const getDataMapPropType = oxssyMap => PropTypes.exact(Object.entries(oxssyMap).reduce(
-  (obj, [key, data]) => {
-    const result = obj;
-    result[key] = data.validator.propType;
-    return result;
-  },
-  {},
-)).isRequired;
-
-class OxssyMap {
-  constructor(oxssyMap, transform = null) {
-    this.oxssyMap = oxssyMap;
-    this.transform = transform;
-    this.validator.propType = getDataMapPropType(this.oxssyMap);
-    this.cachedValue = {};
-    this.subscribedTo = new Set();
-    this.emitters().forEach(emitter => this.subscribeTo(emitter));
+export default class OxssyMap extends OxssyCollection {
+  constructor(oxssyMap, isRequired = true, transform = null, translateError = null) {
+    super(isRequired, transform, translateError);
+    this.oxssyMap = oxssyMap || {};
+    Object.entries(this.oxssyMap).forEach(entry => this.observeChild(...entry));
   }
 
-  emitters() {
+  children() {
     return Object.values(this.oxssyMap);
   }
 
-  get value() {
-    if (this.dirty) {
-      if (typeof this.transform === 'function') {
-        this.cachedValue = this.transform(mapEval(this.oxssyMap));
-      } else {
-        this.cachedValue = mapEval(this.oxssyMap);
-      }
-      this.dirty = false;
+  childrenEval(validation = false) {
+    return mapEval(this.oxssyMap, validation);
+  }
+
+  destroy(cascade = false) {
+    Object.keys(this.oxssyMap).forEach((key) => {
+      this.removeKey(key, cascade);
+    });
+  }
+
+  delete(key, destroy = false, cascade = false) {
+    if (!this.oxssyMap[key]) {
+      return Promise.resolve();
     }
-    return this.cachedValue;
+    return this.maybeNotifyAfter(() => {
+      this.removeKey(key, destroy, cascade);
+      return Promise.resolve();
+    });
   }
 
-  get type() {
-    return this.validator;
-  }
-
-  update(value, strict = false) {
-    const childPromises = [];
-    Object.entries(value).forEach(([key, subValue]) => {
-      const child = this.oxssyMap[key];
-      if (child) {
-        childPromises.push(child.update(subValue));
-      } else if (strict) {
-        return Promise.reject(new Error('Invalid key for update'));
+  get handler() {
+    const handlers = {};
+    Object.entries(this.oxssyMap).forEach(([key, child]) => {
+      const childHandler = child.handler;
+      if (childHandler) {
+        handlers[key] = childHandler;
       }
-    })
-    return Promise.all(childPromises);
-  }
-
-  reset() {
-    return Promise.all(this.emitters().map(emitter => emitter.reset()));
-  }
-
-  validator() {
-    for (const emitter of this.emitters()) {
-      const emitterError = emitter.validate();
-      if (emitterError !== null) {
-        return emitterError;
-      }
+    });
+    if (Object.keys(handlers).length === 0) {
+      return null;
     }
-    return null;
+    return handlers;
+  }
+
+  set(key, child, destroyOnCollision = false, cascade = false) {
+    if (this.oxssyMap[key] === child) {
+      return Promise.resolve();
+    }
+    return this.maybeNotifyAfter(() => {
+      if (this.oxssyMap[key]) {
+        this.removeKey(key, destroyOnCollision, cascade);
+      }
+      this.oxssyMap[key] = child;
+      this.observeChild(key, child);
+      return Promise.resolve();
+    });
+  }
+
+  removeKey(key, destroy, cascade) {
+    const toRemove = this.oxssyMap[key];
+    if (toRemove.offObserve(this) && destroy) {
+      toRemove.destroy(cascade);
+    }
+    delete this.oxssyMap[key];
+  }
+
+  update(value, excluded = null) {
+    return this.maybeNotifyAfter(
+      () => {
+        if (value === null) {
+          return this.setNull(true);
+        }
+        this.isNull = false;
+        const childPromises = [];
+        for (const [key, subValue] of Object.entries(value)) {
+          const child = this.oxssyMap[key];
+          if (child) {
+            childPromises.push(child.update(subValue, this));
+          }
+        }
+        return Promise.all(childPromises);
+      },
+      null,
+      excluded,
+    );
   }
 }
-export default Conduit(OxssyMap);

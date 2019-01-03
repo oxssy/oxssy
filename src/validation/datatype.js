@@ -1,5 +1,6 @@
 import { isValidElement } from 'react';
 import { errorCode } from './error';
+import option from './option';
 import { is } from '../util';
 
 const getValueType = (value) => {
@@ -12,7 +13,14 @@ const getValueType = (value) => {
   return jsType;
 };
 
-const validateOptions = (options, value) => null;
+const validateOption = (options, value) => {
+  for (const [key, spec] of Object.entries(options)) {
+    if (!option[key]) { throw new Error(`datatype: invalid validation option ${key}`); }
+    const error = option[key](value, spec);
+    if (error) { return error; }
+  }
+  return null;
+};
 
 const chainableValidator = (validate) => {
   const validateRequired = (isRequired, value) => {
@@ -23,16 +31,16 @@ const chainableValidator = (validate) => {
   };
   const validator = value => validateRequired(false, value);
   validator.isRequired = value => validateRequired(true, value);
-  validator.withOptions = options => (
-    value => validator(value) || validateOptions(options, value)
+  validator.withOption = options => (
+    value => validator(value) || validateOption(options, value)
   );
-  validator.isRequired.withOptions = options => (
-    value => validator.isRequired(value) || validateOptions(options, value)
+  validator.isRequired.withOption = options => (
+    value => validator.isRequired(value) || validateOption(options, value)
   );
   validator.baseType = validate.baseType;
   validator.isRequired.baseType = validate.baseType;
-  validator.withOptions.baseType = validate.baseType;
-  validator.isRequired.withOptions.baseType = validate.baseType;
+  validator.withOption.baseType = validate.baseType;
+  validator.isRequired.withOption.baseType = validate.baseType;
   return validator;
 };
 

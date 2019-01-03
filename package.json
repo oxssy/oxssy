@@ -1,6 +1,6 @@
 {
   "name": "oxssy",
-  "version": "0.0.1",
+  "version": "0.1.18",
   "author": "Oxssy <oxssy.com@gmail.com>",
   "description": "Data stores for react applications",
   "main": "dist/index.js",
@@ -17,8 +17,7 @@
     "url": "git+ssh://git@github.com/oxssy/oxssy.git"
   },
   "dependencies": {
-    "hoist-non-react-statics": ">=2.5.0",
-    "prop-types": ">=15.6.1"
+    "hoist-non-react-statics": ">=2.5.0"
   },
   "devDependencies": {
     "babel-cli": ">=6.26.0",
