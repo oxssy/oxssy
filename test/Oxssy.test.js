@@ -1,6 +1,4 @@
 import {
-  datatype,
-  errorCode,
   Oxssy,
   OxssyArray,
   OxssyMap,
@@ -14,43 +12,13 @@ const TestObserver = Observer(class BaseObserver {
 
 describe('Oxssy', () => {
   test('creating root Oxssy', () => {
-    const testData = new Oxssy(null, datatype.string);
+    const testData = new Oxssy();
     expect(testData).not.toBeNull();
   });
 
   test('creating Oxssy with initial value', () => {
-    const testData = new Oxssy(datatype.string, 'test');
+    const testData = new Oxssy('test');
     expect(testData.value).toBe('test');
-  });
-
-  test('array operations for Oxssy that is of type array', async () => {
-    const testData = new Oxssy(datatype.arrayOf(datatype.string).isRequired, []);
-    expect(testData.value).toEqual([]);
-    testData.push('tiger');
-    expect(testData.value).toEqual(['tiger']);
-    testData.unshift('dragon', 'snake');
-    expect(testData.value).toEqual(['dragon', 'snake', 'tiger']);
-    testData.reverse();
-    expect(testData.value).toEqual(['tiger', 'snake', 'dragon']);
-    await testData.shift().then(shifted => expect(shifted).toBe('tiger'));
-    await testData.pop().then(popped => expect(popped).toBe('dragon'));
-  });
-
-  test('validating Oxssy will notify', () => {
-    const testData = new Oxssy(datatype.string.isRequired.withOption({ notEmpty: true }), '');
-    const observer = new TestObserver();
-    testData.onObserve(observer);
-    return testData.validate()
-      .then(() => {
-        expect(testData.validation).toBe(errorCode.INVALID_VALUE);
-        expect(observer.received).toBe(true);
-        observer.received = false;
-      })
-      .then(() => testData.unsetValidationError())
-      .then(() => {
-        expect(testData.validation).toBe(null);
-        expect(observer.received).toBe(true);
-      });
   });
 });
 
@@ -101,9 +69,9 @@ describe('OxssyCollection', () => {
   });
 
   test('OxssyCollection notifies only if the recached value has changed', async () => {
-    const oxssy1 = new Oxssy(null, 1);
-    const oxssy2 = new Oxssy(null, 2);
-    const array = new OxssyArray([oxssy1, oxssy2], true, values => values[1]);
+    const oxssy1 = new Oxssy(1);
+    const oxssy2 = new Oxssy(2);
+    const array = new OxssyArray([oxssy1, oxssy2], values => values[1]);
     array.recache();
     const testObserver1 = new TestObserver();
     array.onObserve(testObserver1);
@@ -128,33 +96,10 @@ describe('OxssyCollection', () => {
       });
   });
 
-  test('OxssyCollection validates and notifies', () => {
-    const oxssy = new Oxssy(datatype.number.withOption({ greaterThan: 0 }), -1);
+  test('OxssyCollection can be set to null', async () => {
+    const oxssy = new Oxssy(-1);
     const array = new OxssyArray([oxssy]);
     const map = new OxssyMap({ array });
-    const observer = new TestObserver();
-    map.onObserve(observer);
-    return map.validate()
-      .then(() => {
-        expect(oxssy.validation).toBe(errorCode.TOO_SMALL);
-        expect(array.validation).toEqual([errorCode.TOO_SMALL]);
-        expect(map.validation).toEqual({ array: [errorCode.TOO_SMALL] });
-        expect(observer.received).toBe(true);
-        observer.received = false;
-      })
-      .then(() => map.unsetValidationError())
-      .then(() => {
-        expect(oxssy.validation).toBe(null);
-        expect(array.validation).toEqual([null]);
-        expect(map.validation).toEqual({ array: [null] });
-        expect(observer.received).toBe(true);
-      });
-  });
-
-  test('OxssyCollection can be set to null', async () => {
-    const oxssy = new Oxssy(datatype.number.withOption({ greaterThan: 0 }), -1);
-    const array = new OxssyArray([oxssy], false);
-    const map = new OxssyMap({ array }, false);
 
     await array.update(null);
     expect(array.value).toBeNull();
@@ -169,47 +114,13 @@ describe('OxssyCollection', () => {
     expect(array.value).toBeNull();
     expect(map.value).toEqual({ array: null });
   });
-
-  test('OxssyCollection validates after set to null', async () => {
-    const oxssy = new Oxssy(datatype.string.isRequired);
-    const array = new OxssyArray([oxssy], false);
-    const arrayIsRequired = new OxssyArray([oxssy], true);
-    const map = new OxssyMap({ arrayIsRequired }, false);
-    const mapIsRequired = new OxssyMap({ arrayIsRequired }, true);
-    await array.validate()
-      .then(() => expect(array.validation).toEqual([errorCode.REQUIRED]));
-    await array.update(null)
-      .then(() => expect(array.validation).toBeNull());
-    await array.update([1])
-      .then(() => expect(array.validation).toEqual([null]))
-      .then(() => array.validate())
-      .then(() => expect(array.validation).toEqual([errorCode.STRING_EXPECTED]));
-    await arrayIsRequired.validate()
-      .then(() => expect(arrayIsRequired.validation).toEqual([errorCode.STRING_EXPECTED]));
-    await arrayIsRequired.update(null)
-      .then(() => expect(arrayIsRequired.validation).toBe(errorCode.REQUIRED));
-    await map.validate()
-      .then(expect(map.validation).toEqual({ arrayIsRequired: errorCode.REQUIRED }));
-    await map.update(null)
-      .then(() => map.validate())
-      .then(() => {
-        expect(map.validation).toBeNull();
-      });
-    await mapIsRequired.validate()
-      .then(expect(mapIsRequired.validation).toEqual({ arrayIsRequired: errorCode.REQUIRED }));
-    await mapIsRequired.update(null)
-      .then(() => mapIsRequired.validate())
-      .then(() => {
-        expect(mapIsRequired.validation).toBe(errorCode.REQUIRED);
-      });
-  });
 });
 
 
 describe('OxssyMap', () => {
   test('creating OxssyMap', () => {
-    const child1 = new Oxssy(datatype.number, 1);
-    const child2 = new Oxssy(datatype.string, 'second');
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy('second');
     const testData = new OxssyMap({ child1, child2 });
     expect(testData.value).toEqual({
       child1: 1,
@@ -218,10 +129,10 @@ describe('OxssyMap', () => {
   });
 
   test('adding and removing child', () => {
-    const child1 = new Oxssy(datatype.number, 1);
-    const child2 = new Oxssy(datatype.string, 'second');
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy('second');
     const testData = new OxssyMap({ child1, child2 });
-    const newChild = new Oxssy(datatype.bool, true);
+    const newChild = new Oxssy(true);
     expect(testData.value).toEqual({
       child1: 1,
       child2: 'second',
@@ -234,8 +145,8 @@ describe('OxssyMap', () => {
   });
 
   test('updating OxssyMap', () => {
-    const child1 = new Oxssy(datatype.number, 1);
-    const child2 = new Oxssy(datatype.string, 'second');
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy('second');
     const testData = new OxssyMap({ child1, child2 });
     const update = {
       child1: 2,
@@ -250,7 +161,6 @@ describe('OxssyMap', () => {
     const testDataInput = new Oxssy();
     const testData = new OxssyMap(
       { testDataInput },
-      true,
       ({ testDataInput: input }) => (input ? input.length : 0),
     );
     expect(testData.value).toBe(0);
@@ -263,42 +173,65 @@ describe('OxssyMap', () => {
 
 describe('OxssyArray', () => {
   test('creating OxssyArray', () => {
-    const child1 = new Oxssy(datatype.number, 1);
-    const child2 = new Oxssy(datatype.string, 'second');
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy('second');
     const testData = new OxssyArray([child1, child2]);
     expect(testData.value).toEqual([1, 'second']);
   });
 
-  test('array operations', () => {
-    const child1 = new Oxssy(datatype.number, 1);
-    const child2 = new Oxssy(datatype.number, 2);
-    const child3 = new Oxssy(datatype.number, 3);
-    const child4 = new Oxssy(datatype.number, 4);
-    const child5 = new Oxssy(datatype.number, 5);
+  test('array operations', async () => {
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy(2);
+    const child3 = new Oxssy(3);
+    const child4 = new Oxssy(4);
+    const child5 = new Oxssy(5);
     const testData = new OxssyArray();
-    testData.push(child1, child2);
+    await testData.push(child1, child2);
     expect(testData.value).toEqual([1, 2]);
-    testData.unshift(child1, child3);
+    await testData.unshift(child1, child3);
     expect(testData.value).toEqual([1, 3, 1, 2]);
-    testData.shift();
+    await testData.shift();
     expect(testData.value).toEqual([3, 1, 2]);
     expect(child1.observers.has(testData)).toBe(true);
-    testData.pop(true, true);
+    await testData.pop(true, true);
     expect(testData.value).toEqual([3, 1]);
     expect(child2.observers.has(testData)).toBe(false);
-    testData.reverse();
+    await testData.reverse();
     expect(testData.value).toEqual([1, 3]);
-    testData.splice(0, 1, child4, child5, true, true);
+    await testData.splice(0, 1, child4, child5, true, true);
     expect(testData.value).toEqual([4, 5, 3]);
     expect(child1.observers.has(testData)).toBe(false);
     expect(child5.observers.has(testData)).toBe(true);
-    testData.sort((a, b) => a.value - b.value);
+    await testData.sort((a, b) => a.value - b.value);
     expect(testData.value).toEqual([3, 4, 5]);
-  })
+  });
+
+  test('array no-ops', async () => {
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy(2);
+    const child3 = new Oxssy(3);
+    const child4 = new Oxssy(4);
+    const child5 = new Oxssy(5);
+    const testData = new OxssyArray();
+    await testData.push(child1, child2, child3, child4, child5);
+    expect(testData.some(child => child.value > 2)).toBe(true);
+    expect(testData.every(child => child.value > 2)).toBe(false);
+    expect(testData.filter(child => child.value > 2)).toEqual([child3, child4, child5]);
+    testData.forEach(async (child) => {
+      await child.update(child.value + 1);
+    });
+    expect(testData.map(child => child.value)).toEqual([2, 3, 4, 5, 6]);
+    const reduction = (sum, cur) => {
+      if (sum >= cur.value) return sum - cur.value;
+      return sum + cur.value;
+    };
+    expect(testData.reduce(reduction, 2)).toBe(8);
+    expect(testData.reduceRight(reduction, 2)).toBe(2);
+  });
 
   test('updating OxssyArray', () => {
-    const child1 = new Oxssy(datatype.number, 1);
-    const child2 = new Oxssy(datatype.string, 'second');
+    const child1 = new Oxssy(1);
+    const child2 = new Oxssy('second');
     const testData = new OxssyMap({ child1, child2 });
     const update = {
       child1: 2,
@@ -313,7 +246,6 @@ describe('OxssyArray', () => {
     const testInput = new Oxssy();
     const testData = new OxssyMap(
       { testInput },
-      true,
       ({ testInput: input }) => (input ? input.length : 0),
     );
     expect(testData.value).toBe(0);

@@ -6,7 +6,7 @@ import OxssyMap from './OxssyMap';
 import { shallowEqual } from './util';
 
 
-export default function receive(oxssyPaths, isPure = true) {
+export default function oxssify(oxssyPaths, isPure = true) {
   return function hoc(WrappedComponent) {
     class Connected extends Observer(Component) {
       constructor(props) {
@@ -24,12 +24,12 @@ export default function receive(oxssyPaths, isPure = true) {
       }
 
       subscribeData() {
-        if (!this.props.receiveFrom || !this.oxssyPaths) {
+        if (!this.props.oxssy || !this.oxssyPaths) {
           return;
         }
         const oxssyMap = {};
         Object.entries(this.oxssyPaths).forEach(([key, path]) => {
-          oxssyMap[key] = find(this.props.receiveFrom, path);
+          oxssyMap[key] = find(this.props.oxssy, path);
         });
         this.oxssyMap = new OxssyMap(oxssyMap);
         this.oxssyMap.onObserve(this);
@@ -48,7 +48,7 @@ export default function receive(oxssyPaths, isPure = true) {
       shouldComponentUpdate(nextProps) {
         const haveOwnPropsChanged = !shallowEqual(this.props, nextProps);
         if (haveOwnPropsChanged) {
-          if (this.props.receiveFrom !== nextProps.receiveFrom) {
+          if (this.props.oxssy !== nextProps.oxssy) {
             this.haveSubscriptionsChanged = true;
           }
         }
@@ -70,7 +70,7 @@ export default function receive(oxssyPaths, isPure = true) {
           {
             ...this.props,
             ...this.oxssyMap.value,
-            handler: this.oxssyMap.handler,
+            oxssyHandler: this.oxssyMap.handler,
             validation: this.oxssyMap.validation,
           },
         );

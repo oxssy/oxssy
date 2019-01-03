@@ -1,40 +1,41 @@
-import { errorCode, ValidationError } from './validation';
 import { Observable, Observer } from './Observer';
 import { shallowEqual } from './util';
 
 
-const Relay = Class => class extends Observer(Observable(Class)) {
-  promiseNotified(messageId) {
-    this.isNull = false;
-    if (!this.observers || this.observers.size === 0) {
-      this.isOutdated = true;
-      return Promise.resolve();
-    }
-    return this.maybeNotifyAfter(() => Promise.resolve(), messageId);
-  }
-};
-
 class OxssyCollection {
-  constructor(isRequired = true, transform = null, translateError = null) {
+  constructor(collection = null, transform = null) {
     this.transform = transform;
     this.cachedValue = null;
-    this.validationError = null;
+    this.cachedHandlers = null;
     this.isNull = false;
     this.isOutdated = true;
-    this.isRequired = isRequired;
-    this.translateError = translateError;
+    this.oxssyCollection = collection;
+    this.entries().forEach(([key, child]) => this.observeChild(child, key));
   }
 
-  get validation() {
-    if (this.isOutdated) {
-      this.recache();
+  keys() {
+    return Object.keys(this.oxssyCollection);
+  }
+
+  values() {
+    return Object.values(this.oxssyCollection);
+  }
+
+  entries() {
+    return Object.entries(this.oxssyCollection);
+  }
+
+  requireOxssy(child, key = null) {
+    if (!child.isOxssy) {
+      throw new Error(
+        `Value ${child} ${key !== null ? `at key ${key}` : ``} is not an oxssy.`
+      );
     }
-    if (this.isNull) {
-      return this.translateError
-        ? this.translateError(this.validationError)
-        : this.validationError;
-    }
-    return this.validationError;
+  }
+
+  observeChild(child, key = null) {
+    this.requireOxssy(child, key);
+    child.onObserve(this);
   }
 
   get value() {
@@ -44,51 +45,56 @@ class OxssyCollection {
     return this.cachedValue;
   }
 
-  maybeNotifyAfter(promiseFunction, messageId, excluded = null) {
-    const previousValue = this.cachedValue;
-    const previousValidation = this.validationError;
-    this.isOutdated = true;
-    return promiseFunction().then(() => {
+  get handler() {
+    if (this.isOutdated) {
       this.recache();
-      if (
-        previousValue === this.cachedValue
-        && previousValidation === this.validationError
-      ) {
+    }
+    return this.cachedHandlers;
+  }
+
+  get isOxssy() {
+    return true;
+  }
+
+  onNotified(messageId) {
+    this.isNull = false;
+    if (!this.observers || this.observers.size === 0) {
+      this.isOutdated = true;
+      return Promise.resolve();
+    }
+    return this.maybeRelay(() => Promise.resolve(), messageId);
+  }
+
+  maybeRelay(promiseFunction, messageId, excluded = null) {
+    return promiseFunction().then(() => {
+      const previousValue = this.cachedValue;
+      this.isOutdated = true;
+      this.recache();
+      if (previousValue === this.cachedValue) {
         return Promise.resolve();
       }
       return this.notify(messageId, excluded);
     });
   }
 
-  observeChild(key, child) {
-    if (!child || !child.onObserve) {
-      throw new Error(`OxssyCollection: invalid value ${child} for key ${key}`);
-    }
-    child.onObserve(this);
-  }
-
   recache() {
+    if (!this.isOutdated) {
+      return;
+    }
     this.isOutdated = false;
     if (this.isNull) {
       this.cachedValue = null;
-      this.validationError = this.isRequired ? errorCode.REQUIRED : null;
+      this.cachedHandlers = null;
       return;
     }
-    const value = typeof this.transform === 'function'
-      ? this.transform(this.childrenEval())
-      : this.childrenEval();
-    if (!shallowEqual(value, this.cachedValue)) {
-      this.cachedValue = value;
-    }
-    const validationError = this.childrenEval(true);
-    if (!shallowEqual(validationError, this.validationError)) {
-      this.validationError = validationError;
-    }
+    this.cachedValue = typeof this.transform === 'function'
+      ? this.transform(this.eval()) : this.eval();
+    this.cachedHandlers = this.handlers();
   }
 
   reset(excluded = null) {
-    return this.maybeNotifyAfter(
-      () => Promise.all(this.children().map(child => child.reset(this))),
+    return this.maybeRelay(
+      () => Promise.all(this.entries().map(([key, child]) => child.reset(this))),
       null,
       excluded,
     );
@@ -101,35 +107,6 @@ class OxssyCollection {
     this.isNull = isNull;
     return this.reset();
   }
-
-  unsetValidationError(excluded = null) {
-    return this.maybeNotifyAfter(
-      () => Promise.all(this.children().map(child => child.unsetValidationError(this))),
-      null,
-      excluded,
-    );
-  }
-
-  validate(rejectOnError = false, excluded = null) {
-    let shouldReject = false;
-    return this.maybeNotifyAfter(
-      this.isNull
-        ? () => new Promise((resolve) => {
-          shouldReject = this.isRequired && rejectOnError;
-          resolve();
-        })
-        : () => Promise.all(this.children().map(child => child.validate(true, this)))
-          .catch(() => { shouldReject = rejectOnError; }),
-      null,
-      excluded,
-    ).then(() => (shouldReject
-      ? Promise.reject(new ValidationError(
-        this,
-        this.isNull ? errorCode.REQUIRED : errorCode.INVALID_VALUE,
-      ))
-      : Promise.resolve()
-    ));
-  }
 }
 
-export default Relay(OxssyCollection);
+export default Observer(Observable(OxssyCollection));

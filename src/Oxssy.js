@@ -1,4 +1,3 @@
-import { datatype, ValidationError } from './validation';
 import { Observable } from './Observer';
 import { shallowEqual } from './util';
 
@@ -16,26 +15,14 @@ function handleChange(e) {
     return this.update(selectedValues);
   }
   return this.update(target.value);
-} // TODO add HTML 5 support
+} // TODO add HTML 5 support; add promises for time debounce
 
 class Oxssy {
-  constructor(
-    type,
-    value = null,
-    hasHandler = false,
-    validatesOnUpdate = false,
-    translateError = null,
-  ) {
-    this.oxssyType = type || datatype.any;
-    this.validationError = null;
-    this.validatesOnUpdate = validatesOnUpdate;
+  constructor(value = null, hasHandler = false) {
+    this.mixins = {};
     this.cachedValue = value;
-    this.translateError = translateError;
     if (hasHandler) {
       this.handleChange = handleChange.bind(this);
-    }
-    if (this.oxssyType.baseType === 'array') {
-      this.enableArrayOps();
     }
   }
 
@@ -49,31 +36,8 @@ class Oxssy {
     return this.cachedValue;
   }
 
-  get validation() {
-    return this.translateError
-      ? this.translateError(this.validationError)
-      : this.validationError;
-  }
-
-  enableArrayOps() {
-    const arrayOps = ['fill', 'pop', 'push', 'reverse', 'shift', 'splice', 'sort', 'unshift'];
-    arrayOps.forEach((opName) => {
-      this[opName] = function op(...params) {
-        const result = this.cachedValue[opName](...params);
-        return this.notify().then(() => result);
-      };
-    });
-  }
-
-  setValidationError(validationError, rejectOnError = false, excluded = null) {
-    const changed = this.validationError !== validationError;
-    if (changed) {
-      this.validationError = validationError;
-    }
-    return (changed ? this.notify(null, excluded) : Promise.resolve())
-      .then(() => ((rejectOnError && validationError)
-        ? Promise.reject(new ValidationError(this, validationError))
-        : Promise.resolve()));
+  get isOxssy() {
+    return true;
   }
 
   update(value, excluded = null) {
@@ -82,25 +46,12 @@ class Oxssy {
     }
     return new Promise((resolve) => {
       this.cachedValue = value;
-      if (this.validatesOnUpdate) {
-        this.validationError = this.oxssyType(value);
-      } else {
-        this.validationError = null;
-      }
+      Object.values(this.mixins).forEach(mixin => mixin.update(value));
       resolve();
     }).then(() => this.notify(null, excluded));
   }
 
-  unsetValidationError(excluded = null) {
-    return this.setValidationError(null, false, excluded);
-  }
-
-  validate(rejectOnError = false, excluded = null) {
-    return this.setValidationError(this.oxssyType(this.value), rejectOnError, excluded);
-  }
-
   reset(excluded = null) {
-    this.validationError = null;
     return this.update(null, excluded);
   }
 }

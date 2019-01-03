@@ -32,14 +32,14 @@ export default function find(data, path) {
       return null;
     }
     const actualIndex = nextIndex >= 0 ? nextIndex : (data.length + nextIndex);
-    if (Object.prototype.hasOwnProperty.call(data, 'oxssyArray')) {
-      return find(data.oxssyArray[actualIndex], rest);
+    if (data.isOxssy) {
+      return find(data.oxssyCollection[actualIndex], rest);
     } else if (Array.isArray(data)) {
       return find(data[actualIndex], rest);
     }
     return null;
-  } else if (Object.prototype.hasOwnProperty.call(data, 'oxssyMap')) {
-    return find(data.oxssyMap[next], rest);
+  } else if (Object.prototype.hasOwnProperty.call(data, 'oxssyCollection')) {
+    return find(data.oxssyCollection[next], rest);
   }
   return find(data[next], rest);
 }
