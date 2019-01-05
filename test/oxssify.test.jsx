@@ -2,7 +2,7 @@ import React from 'react';
 import enzyme, { configure } from 'enzyme';
 import sinon from 'sinon';
 import Adapter from 'enzyme-adapter-react-16';
-import { Oxssy, OxssyMap, datatype, errorCode, oxssify } from '../src';
+import { Oxssy, OxssyMap, oxssify } from '../src';
 
 configure({ adapter: new Adapter() });
 
@@ -31,7 +31,7 @@ describe('oxssify', () => {
 
   test('oxssifying functional component that has a handler', () => {
     const testState = new Oxssy('test', true);
-    const testComponent = props => <p id="test">{typeof props.oxssyHandler.testState}</p>;
+    const testComponent = props => <p id="test">{typeof props.oxssy.testState.handler}</p>;
     const Connected = oxssify({ testState: '' })(testComponent);
     const rendered = enzyme.mount(<Connected oxssy={testState} />);
     expect(rendered.text()).toBe('function');

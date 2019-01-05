@@ -41,8 +41,8 @@ class Oxssy {
       return Promise.resolve();
     }
     return new Promise((resolve) => {
+      Object.values(this.mixins).forEach(mixin => mixin.onUpdate(this.cachedValue, value));
       this.cachedValue = value;
-      Object.values(this.mixins).forEach(mixin => mixin.update(value));
       resolve();
     }).then(() => this.notify(null, excluded));
   }

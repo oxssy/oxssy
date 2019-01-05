@@ -5,7 +5,6 @@ import find from './find';
 import OxssyMap from './OxssyMap';
 import { shallowEqual } from './util';
 
-
 export default function oxssify(oxssyPaths, isPure = true) {
   return function hoc(WrappedComponent) {
     class Connected extends Observer(Component) {
@@ -68,20 +67,20 @@ export default function oxssify(oxssyPaths, isPure = true) {
           this.unsubscribeData();
           this.subscribeData();
         }
-        const augmented = {
-          ...this.props,
-          ...this.oxssyMap.value,
-          oxssyHandler: this.oxssyMap.handler,
-        };
         this.renderedElement = createElement(
           WrappedComponent,
-          augmented,
+          {
+            ...this.props,
+            ...this.oxssyMap.value,
+            oxssy: {...this.oxssyMap.oxssyCollection},
+          },
         );
         return this.renderedElement;
       }
     }
     Connected.displayName =
       `Connected(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+
     return hoistNonReactStatics(Connected, WrappedComponent);
   };
 }
