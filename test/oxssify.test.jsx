@@ -7,10 +7,31 @@ import { Oxssy, OxssyMap, datatype, errorCode, oxssify } from '../src';
 configure({ adapter: new Adapter() });
 
 describe('oxssify', () => {
-  test('connecting to functional component that has a handler', () => {
+  test('oxssify', () => {
+    const test1 = new Oxssy(1);
+    const test2 = new Oxssy(2);
+    const test3 = new Oxssy(3);
+    const grouped = new OxssyMap({
+      2: test2,
+      3: test3,
+    });
+    const testComponent = props => <p id="test">{
+      (props[1] || 0) + (props[2] || 0) + (props[3] || 0)
+    }</p>;
+    const Connected = oxssify({
+      1: test1,
+      2: '2',
+      3: '3',
+    })(testComponent);
+    const rendered1 = enzyme.mount(<Connected oxssy={grouped} />);
+    expect(rendered1.text()).toBe('6');
+    const rendered2 = enzyme.mount(<Connected />);
+    expect(rendered2.text()).toBe('1');
+  });
+
+  test('oxssifying functional component that has a handler', () => {
     const testState = new Oxssy('test', true);
     const testComponent = props => <p id="test">{typeof props.oxssyHandler.testState}</p>;
-
     const Connected = oxssify({ testState: '' })(testComponent);
     const rendered = enzyme.mount(<Connected oxssy={testState} />);
     expect(rendered.text()).toBe('function');
@@ -69,23 +90,4 @@ describe('oxssify', () => {
     }));
   });
 
-  // test('validation causes component to render', () => {
-  //   const data1 = new Oxssy(datatype.string.isRequired.withOption({ notContainsUpperCase: true }), 'Berkeley');
-  //   const map1 = new OxssyMap({ california: data1 });
-  //   const Connected = oxssify({ text1: '.california' })(testComponent);
-  //   sinon.spy(Connected.prototype, 'render');
-  //   const wrapper = enzyme.mount(<Connected oxssy={map1} text2="is beautiful" />);
-  //   expect(wrapper.text()).toBe('Berkeley is beautiful');
-  //   expect(data1.validation).toBeNull();
-  //   expect(Connected.prototype.render.callCount).toBe(1);
-  //   return map1.validate().then(() => {
-  //     expect(data1.validation).toBe(errorCode.CHECK_UPPERCASE);
-  //     expect(Connected.prototype.render.callCount).toBe(2);
-  //     expect(wrapper.text()).toBe('Berkeley is beautiful');
-  //   }).then(() => map1.unsetValidationError().then(() => {
-  //     expect(data1.validation).toBeNull();
-  //     expect(Connected.prototype.render.callCount).toBe(3);
-  //     expect(wrapper.text()).toBe('Berkeley is beautiful');
-  //   }));
-  // });
 });

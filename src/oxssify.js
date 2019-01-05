@@ -24,12 +24,15 @@ export default function oxssify(oxssyPaths, isPure = true) {
       }
 
       subscribeData() {
-        if (!this.props.oxssy || !this.oxssyPaths) {
+        if (!this.oxssyPaths) {
           return;
         }
         const oxssyMap = {};
         Object.entries(this.oxssyPaths).forEach(([key, path]) => {
-          oxssyMap[key] = find(this.props.oxssy, path);
+          const found = find(this.props.oxssy, path);
+          if (found && found.isOxssy) {
+            oxssyMap[key] = found;
+          }
         });
         this.oxssyMap = new OxssyMap(oxssyMap);
         this.oxssyMap.onObserve(this);
@@ -65,14 +68,14 @@ export default function oxssify(oxssyPaths, isPure = true) {
           this.unsubscribeData();
           this.subscribeData();
         }
+        const augmented = {
+          ...this.props,
+          ...this.oxssyMap.value,
+          oxssyHandler: this.oxssyMap.handler,
+        };
         this.renderedElement = createElement(
           WrappedComponent,
-          {
-            ...this.props,
-            ...this.oxssyMap.value,
-            oxssyHandler: this.oxssyMap.handler,
-            validation: this.oxssyMap.validation,
-          },
+          augmented,
         );
         return this.renderedElement;
       }

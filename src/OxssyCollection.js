@@ -52,10 +52,6 @@ class OxssyCollection {
     return this.cachedHandlers;
   }
 
-  get isOxssy() {
-    return true;
-  }
-
   onNotified(messageId) {
     this.isNull = false;
     if (!this.observers || this.observers.size === 0) {
@@ -108,5 +104,7 @@ class OxssyCollection {
     return this.reset();
   }
 }
+OxssyCollection.prototype.isOxssy = true;
+OxssyCollection.prototype.isOxssyCollection = true;
 
 export default Observer(Observable(OxssyCollection));

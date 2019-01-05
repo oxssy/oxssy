@@ -21,10 +21,12 @@ const splitPath = (path) => {
 };
 
 export default function find(data, path) {
+  if (!path) { return data && data.isOxssy ? data : null; }
+  if (path.isOxssy) { return path; }
   if (!data) { return null; }
-  if (!path) { return data; }
+
   const [next, rest] = splitPath(path);
-  if (!next) { return data; }
+  if (!next) { return data.isOxssy ? data : null; }
   const index = /^\[(-?\d+)\]$/.exec(next);
   if (index) {
     const nextIndex = +index[1];
@@ -32,13 +34,12 @@ export default function find(data, path) {
       return null;
     }
     const actualIndex = nextIndex >= 0 ? nextIndex : (data.length + nextIndex);
-    if (data.isOxssy) {
+    if (data.isOxssyCollection) {
       return find(data.oxssyCollection[actualIndex], rest);
-    } else if (Array.isArray(data)) {
+    } else {
       return find(data[actualIndex], rest);
     }
-    return null;
-  } else if (Object.prototype.hasOwnProperty.call(data, 'oxssyCollection')) {
+  } else if (data.isOxssyCollection) {
     return find(data.oxssyCollection[next], rest);
   }
   return find(data[next], rest);

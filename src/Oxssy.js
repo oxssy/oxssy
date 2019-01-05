@@ -36,10 +36,6 @@ class Oxssy {
     return this.cachedValue;
   }
 
-  get isOxssy() {
-    return true;
-  }
-
   update(value, excluded = null) {
     if (shallowEqual(value, this.cachedValue)) {
       return Promise.resolve();
@@ -55,5 +51,6 @@ class Oxssy {
     return this.update(null, excluded);
   }
 }
+Oxssy.prototype.isOxssy = true;
 
 export default Observable(Oxssy);
