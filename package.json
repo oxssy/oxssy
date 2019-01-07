@@ -1,6 +1,6 @@
 {
   "name": "oxssy",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "author": "Oxssy <oxssy.com@gmail.com>",
   "description": "Data stores for react applications",
   "main": "dist/index.js",
