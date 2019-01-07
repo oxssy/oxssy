@@ -9,9 +9,11 @@ function handleChange(e) {
   }
   if (target.type === 'select-multiple') {
     const selectedValues = [];
-    for (const option of target.options) {
-      if (option.selected) { selectedValues.push(option.value); }
-    }
+    target.options.forEach((option) => {
+      if (option.selected) {
+        selectedValues.push(option.value);
+      }
+    });
     return this.update(selectedValues);
   }
   return this.update(target.value);
@@ -37,11 +39,13 @@ class Oxssy {
   }
 
   update(value, excluded = null) {
-    if (shallowEqual(value, this.cachedValue)) {
+    if (
+      Object.values(this.mixins).every(mix => !mix.onUpdate(value, this.cachedValue))
+      && shallowEqual(value, this.cachedValue)
+    ) {
       return Promise.resolve();
     }
     return new Promise((resolve) => {
-      Object.values(this.mixins).forEach(mixin => mixin.onUpdate(this.cachedValue, value));
       this.cachedValue = value;
       resolve();
     }).then(() => this.notify(null, excluded));

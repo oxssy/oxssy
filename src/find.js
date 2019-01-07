@@ -36,10 +36,10 @@ export default function find(data, path) {
     const actualIndex = nextIndex >= 0 ? nextIndex : (data.length + nextIndex);
     if (data.isOxssyCollection) {
       return find(data.oxssyCollection[actualIndex], rest);
-    } else {
-      return find(data[actualIndex], rest);
     }
-  } else if (data.isOxssyCollection) {
+    return find(data[actualIndex], rest);
+  }
+  if (data.isOxssyCollection) {
     return find(data.oxssyCollection[next], rest);
   }
   return find(data[next], rest);

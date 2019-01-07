@@ -1,6 +1,13 @@
 import { Observable, Observer } from './Observer';
-import { shallowEqual } from './util';
 
+
+const requireOxssy = (child, key = null) => {
+  if (!child.isOxssy) {
+    throw new Error(
+      `Value ${child} ${key !== null ? `at key ${key}` : ''} is not an oxssy.`,
+    );
+  }
+};
 
 class OxssyCollection {
   constructor(collection = null, transform = null) {
@@ -25,16 +32,8 @@ class OxssyCollection {
     return Object.entries(this.oxssyCollection);
   }
 
-  requireOxssy(child, key = null) {
-    if (!child.isOxssy) {
-      throw new Error(
-        `Value ${child} ${key !== null ? `at key ${key}` : ``} is not an oxssy.`
-      );
-    }
-  }
-
   observeChild(child, key = null) {
-    this.requireOxssy(child, key);
+    requireOxssy(child, key);
     child.onObserve(this);
   }
 
@@ -90,7 +89,7 @@ class OxssyCollection {
 
   reset(excluded = null) {
     return this.maybeRelay(
-      () => Promise.all(this.entries().map(([key, child]) => child.reset(this))),
+      () => Promise.all(this.values().map(child => child.reset(this))),
       null,
       excluded,
     );

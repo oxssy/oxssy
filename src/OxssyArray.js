@@ -6,7 +6,7 @@ export default class OxssyArray extends OxssyCollection {
   constructor(oxssyArray, transform = null) {
     super(oxssyArray || [], transform);
   }
-  
+
   eval() {
     return arrayEval(this.oxssyCollection);
   }
@@ -14,7 +14,7 @@ export default class OxssyArray extends OxssyCollection {
   handlers() {
     const handlers = [];
     let anyHandler = false;
-    this.entries().forEach(([key, child]) => {
+    this.entries().forEach(([_, child]) => {
       const childHandler = child.handler;
       handlers.push(childHandler);
       if (childHandler) {
@@ -48,8 +48,9 @@ export default class OxssyArray extends OxssyCollection {
         }
         this.isNull = false;
         return Promise.all(Array.isArray(value)
-          ? this.oxssyCollection.slice(0, value.length).map((child, index) =>
-            child.update(value[index], this))
+          ? this.oxssyCollection.slice(0, value.length).map(
+            (child, index) => child.update(value[index], this),
+          )
           : this.oxssyCollection.map(child => child.update(value, this)));
       },
       null,
@@ -86,36 +87,36 @@ export default class OxssyArray extends OxssyCollection {
 }
 
 ['reverse', 'sort'].forEach((fn) => {
-  OxssyArray.prototype[fn] = function (...params) {
+  OxssyArray.prototype[fn] = function reorder(...params) {
     return this.maybeRelay(() => {
       this.oxssyCollection[fn](...params);
       return Promise.resolve();
     });
-  }
+  };
 });
 
 ['push', 'unshift'].forEach((fn) => {
-  OxssyArray.prototype[fn] = function (...params) {
+  OxssyArray.prototype[fn] = function insertion(...params) {
     return this.maybeRelay(() => {
       params.forEach((child, index) => this.observeChild(child, index));
       this.oxssyCollection[fn](...params);
       return Promise.resolve();
     });
-  }
+  };
 });
 
 ['pop', 'shift'].forEach((fn) => {
-  OxssyArray.prototype[fn] = function (destroy = false, cascade = false) {
+  OxssyArray.prototype[fn] = function removal(destroy = false, cascade = false) {
     return this.maybeRelay(() => {
       const removed = this.oxssyCollection[fn]();
       if (removed.offObserve(this) && destroy) { removed.destroy(cascade); }
       return Promise.resolve();
     });
-  }
+  };
 });
 
 ['every', 'filter', 'forEach', 'map', 'reduce', 'reduceRight', 'some'].forEach((fn) => {
-  OxssyArray.prototype[fn] = function (...params) {
+  OxssyArray.prototype[fn] = function noOp(...params) {
     return this.oxssyCollection[fn](...params);
-  }
+  };
 });

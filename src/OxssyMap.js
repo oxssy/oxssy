@@ -37,12 +37,12 @@ export default class OxssyMap extends OxssyCollection {
     if (this.oxssyCollection[key] === child) {
       return Promise.resolve();
     }
-    return this.maybeRelay(() => new Promise(resolve => {
+    return this.maybeRelay(() => new Promise((resolve) => {
       if (this.oxssyCollection[key]) {
         this.removeKey(key, destroyOnCollision, cascade);
       }
       this.oxssyCollection[key] = child;
-      child.onObserve(this);;
+      child.onObserve(this);
       resolve();
     }));
   }
@@ -51,7 +51,7 @@ export default class OxssyMap extends OxssyCollection {
     if (!this.oxssyCollection[key]) {
       return Promise.resolve();
     }
-    return this.maybeRelay(() => new Promise(resolve => {
+    return this.maybeRelay(() => new Promise((resolve) => {
       this.removeKey(key, destroy, cascade);
       resolve();
     }));
@@ -73,12 +73,12 @@ export default class OxssyMap extends OxssyCollection {
         }
         this.isNull = false;
         const childPromises = [];
-        for (const [key, subValue] of Object.entries(value)) {
+        Object.entries(value).forEach(([key, subValue]) => {
           const child = this.oxssyCollection[key];
           if (child) {
             childPromises.push(child.update(subValue, this));
           }
-        }
+        });
         return Promise.all(childPromises);
       },
       null,

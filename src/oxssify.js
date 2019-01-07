@@ -72,14 +72,15 @@ export default function oxssify(oxssyPaths, isPure = true) {
           {
             ...this.props,
             ...this.oxssyMap.value,
-            oxssy: {...this.oxssyMap.oxssyCollection},
+            oxssy: { ...this.oxssyMap.oxssyCollection },
           },
         );
         return this.renderedElement;
       }
     }
-    Connected.displayName =
-      `Connected(${WrappedComponent.displayName || WrappedComponent.name || 'Component'})`;
+    Connected.displayName = `Connected(${
+      WrappedComponent.displayName || WrappedComponent.name || 'Component'
+    })`;
 
     return hoistNonReactStatics(Connected, WrappedComponent);
   };
