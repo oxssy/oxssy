@@ -14,7 +14,7 @@ export default class OxssyArray extends OxssyCollection {
   handlers() {
     const handlers = [];
     let anyHandler = false;
-    this.entries().forEach(([_, child]) => {
+    this.values().forEach((child) => {
       const childHandler = child.handler;
       handlers.push(childHandler);
       if (childHandler) {

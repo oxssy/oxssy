@@ -20,14 +20,10 @@
     "hoist-non-react-statics": "^3.2.1"
   },
   "devDependencies": {
-    "babel-cli": ">=6.26.0",
-    "babel-core": ">=6.26.3",
-    "babel-jest": ">=22.4.4",
-    "babel-preset-es2015": ">=6.24.1",
-    "babel-preset-react": ">=6.24.1",
-    "babel-preset-stage-2": ">=6.24.1",
-    "enzyme": "^3.8.0",
-    "enzyme-adapter-react-16": "^1.7.1",
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-transform-runtime": "^7.6.2",
+    "@babel/preset-env": "^7.7.1",
+    "@babel/preset-react": "^7.7.0",
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "^17.1.0",
     "eslint-plugin-import": "^2.14.0",
@@ -35,15 +31,9 @@
     "eslint-plugin-react": "^7.12.3",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
-    "regenerator-runtime": ">=0.11.1",
+    "regenerator-runtime": "^0.13.3",
     "rimraf": "^2.6.3",
     "sinon": "^5.1.1"
-  },
-  "jest": {
-    "setupFiles": [
-      "<rootDir>/jest.shim.js",
-      "<rootDir>/jest.init.js"
-    ]
   },
   "peerDependencies": {
     "react": ">=16.2.0"

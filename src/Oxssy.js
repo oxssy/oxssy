@@ -28,6 +28,7 @@ class Oxssy {
     }
   }
 
+  // eslint-disable-next-line class-methods-use-this
   destroy() {}
 
   get handler() {

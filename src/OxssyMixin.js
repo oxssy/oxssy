@@ -25,7 +25,7 @@ export default class OxssyMixin {
       Object.defineProperty(oxssy, this.actionName, {
         get() {
           return () => {
-            const value = oxssy.value;
+            const { value } = oxssy;
             if (this.mixins[name].activate(value, value)) {
               return oxssy.notify(null);
             }
@@ -45,6 +45,7 @@ export default class OxssyMixin {
     return true;
   }
 
+  // eslint-disable-next-line class-methods-use-this
   compute() {
     return null;
   }
